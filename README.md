@@ -1,3 +1,3 @@
  just a side project
 
- all the code will be uptaded
+ all the code will be updated
