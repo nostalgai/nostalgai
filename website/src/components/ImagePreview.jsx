@@ -1,30 +1,42 @@
+import React from 'react';
+
 function ImagePreview({ originalImage, enhancedImage }) {
-    return (
-      <div className="mt-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <h3 className="text-lg font-medium mb-2">Original Photo</h3>
-            {originalImage && (
-              <img
-                src={originalImage}
-                alt="Original"
-                className="w-full rounded-lg shadow"
-              />
-            )}
-          </div>
-          <div>
-            <h3 className="text-lg font-medium mb-2">Enhanced Photo</h3>
-            {enhancedImage && (
-              <img
-                src={enhancedImage}
-                alt="Enhanced"
-                className="w-full rounded-lg shadow"
-              />
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (!originalImage && !enhancedImage) return null;
   
-  export default ImagePreview;
+  return (
+    <div className="mt-8">
+      <h2 className="text-xl font-semibold mb-4">Results</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {originalImage && (
+          <div className="border rounded-lg overflow-hidden shadow-sm">
+            <div className="p-3 bg-gray-50 border-b">
+              <h3 className="font-medium">Original Image</h3>
+            </div>
+            <img 
+              src={originalImage} 
+              alt="Original" 
+              className="w-full h-auto object-contain"
+              style={{ maxHeight: '400px' }}
+            />
+          </div>
+        )}
+        
+        {enhancedImage && (
+          <div className="border rounded-lg overflow-hidden shadow-sm">
+            <div className="p-3 bg-gray-50 border-b">
+              <h3 className="font-medium">Enhanced Image</h3>
+            </div>
+            <img 
+              src={enhancedImage} 
+              alt="Enhanced" 
+              className="w-full h-auto object-contain"
+              style={{ maxHeight: '400px' }}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default ImagePreview;

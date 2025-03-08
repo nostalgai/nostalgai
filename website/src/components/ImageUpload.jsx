@@ -1,10 +1,9 @@
-import { useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { PhotoIcon } from '@heroicons/react/24/outline';
 
 function ImageUpload({ onUpload }) {
   const onDrop = useCallback((acceptedFiles) => {
-    if (acceptedFiles && acceptedFiles[0]) {
+    if (acceptedFiles && acceptedFiles.length > 0) {
       onUpload(acceptedFiles[0]);
     }
   }, [onUpload]);
@@ -14,22 +13,23 @@ function ImageUpload({ onUpload }) {
     accept: {
       'image/*': ['.jpeg', '.jpg', '.png']
     },
-    multiple: false
+    maxFiles: 1
   });
 
   return (
-    <div
-      {...getRootProps()}
-      className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer
-        ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}`}
+    <div 
+      {...getRootProps()} 
+      className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 transition-colors"
     >
       <input {...getInputProps()} />
-      <PhotoIcon className="mx-auto h-12 w-12 text-gray-400" />
-      <p className="mt-2 text-gray-600">
-        {isDragActive
-          ? 'Drop the photo here'
-          : 'Click or drag a photo to upload'}
-      </p>
+      {isDragActive ? (
+        <p className="text-blue-500">Drop the image here...</p>
+      ) : (
+        <div>
+          <p className="text-gray-500">Drag and drop an image here, or click to select a file</p>
+          <p className="text-sm text-gray-400 mt-2">Supported formats: JPG, PNG</p>
+        </div>
+      )}
     </div>
   );
 }
