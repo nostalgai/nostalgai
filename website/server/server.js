@@ -127,6 +127,47 @@ app.get('/view-photo/:photoId', (req, res) => {
   res.send(`<html><body><h1>Photo ${photoId}</h1><p>This would display the photo with ID: ${photoId}</p></body></html>`);
 });
 
+// AI enhancement endpoint
+app.post('/api/enhance-photo', upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image file provided' });
+    }
+    
+    const imageFilePath = req.file.path;
+    
+    // AI enhancement logic would go here
+    // For now, let's simulate it with a promise
+    const enhancedImageUrl = await new Promise((resolve) => {
+      setTimeout(() => {
+        // In a real implementation, this would be the URL to the enhanced image
+        resolve(`/uploads/enhanced-${req.file.filename}`);
+      }, 2000);
+    });
+    
+    res.json({ 
+      originalImageUrl: `/uploads/${req.file.filename}`,
+      enhancedImageUrl: enhancedImageUrl
+    });
+  } catch (error) {
+    console.error('Enhancement error:', error);
+    res.status(500).json({ error: 'Failed to enhance photo' });
+  }
+});
+
+// Get user's photo collection
+app.get('/api/photos', (req, res) => {
+  // This would normally be fetched from a database
+  // Sending mock data for now
+  res.json({
+    photos: [
+      { id: 1, title: 'Aile Albümü', imageUrl: '/uploads/sample1.jpg', date: '2023-05-15' },
+      { id: 2, title: 'Tatil', imageUrl: '/uploads/sample2.jpg', date: '2023-06-20' },
+      // More photos...
+    ]
+  });
+});
+
 // Socket.io connections
 io.on('connection', (socket) => {
   console.log('New client connected');
