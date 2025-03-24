@@ -1,42 +1,69 @@
-import React, { useState } from 'react';
-import { QRCodeSVG } from 'qrcode.react'; // Fixed import to use named export
+import React, { useState, useEffect } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
+import { io } from 'socket.io-client';
 
 function ScanOption({ onScanComplete }) {
+  const [sessionId, setSessionId] = useState('');
   const [qrCodeValue, setQrCodeValue] = useState('');
   const [showQRCode, setShowQRCode] = useState(false);
+  const [scanStatus, setScanStatus] = useState('idle'); // idle, waiting, complete
   
-  const generateQRCode = () => {
-    // Generate a unique session ID or use a timestamp
-    const sessionId = `scan-session-${Date.now()}`;
-    // This would typically be your application's URL plus the session ID
-    const scanUrl = `https://your-app-url.com/scan/${sessionId}`;
+  useEffect(() => {
+    if (!sessionId) return;
     
-    setQrCodeValue(scanUrl);
-    setShowQRCode(true);
+    // Connect to socket server
+    const socket = io('http://localhost:3001');
     
-    // In a real implementation, you would set up a listener for when
-    // the mobile device completes the scan and uploads an image
-    // For now, we'll simulate this with a timeout
+    // Listen for scan completion
+    socket.on(`scan:${sessionId}`, (data) => {
+      console.log('Scan completed:', data);
+      setScanStatus('complete');
+      if (data.imageUrl) {
+        onScanComplete(data.imageUrl);
+      }
+    });
     
-    // You might want to remove this simulation in production
-    /* 
-    setTimeout(() => {
-      // Simulating receiving an image URL after scan
-      const mockImageUrl = 'https://example.com/mock-scanned-image.jpg';
-      onScanComplete(mockImageUrl);
-    }, 5000);
-    */
+    return () => {
+      socket.disconnect();
+    };
+  }, [sessionId, onScanComplete]);
+  
+  const generateQRCode = async () => {
+    try {
+      // Create a new scan session
+      const response = await fetch('http://localhost:3001/api/create-scan-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      const data = await response.json();
+      const newSessionId = data.sessionId;
+      setSessionId(newSessionId);
+      
+      // Generate mobile scanner URL with session ID
+      const scanUrl = `${window.location.origin}/mobile-scanner?sessionId=${newSessionId}`;
+      
+      setQrCodeValue(scanUrl);
+      setShowQRCode(true);
+      setScanStatus('waiting');
+    } catch (error) {
+      console.error('Failed to create scan session:', error);
+      alert('Tarama oturumu oluşturulamadı. Lütfen tekrar deneyin.');
+    }
   };
 
   return (
     <div className="text-center">
-      <p className="mb-4">Use your mobile device to scan a photo and enhance it instantly.</p>
+      <p className="mb-4">Fiziksel fotoğrafınızı taramak için mobil cihazınızı kullanın.</p>
       
       <button
         onClick={generateQRCode}
-        className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+        disabled={scanStatus === 'waiting'}
+        className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
       >
-        Generate QR Code
+        {scanStatus === 'waiting' ? 'Tarama Bekleniyor...' : 'QR Kod Oluştur'}
       </button>
       
       {showQRCode && (
@@ -45,8 +72,13 @@ function ScanOption({ onScanComplete }) {
             <QRCodeSVG value={qrCodeValue} size={200} />
           </div>
           <p className="mt-2 text-sm text-gray-600">
-            Scan this code with your mobile device
+            Bu kodu mobil cihazınızla tarayın
           </p>
+          {scanStatus === 'waiting' && (
+            <p className="mt-2 text-blue-600 animate-pulse">
+              Tarama bekleniyor...
+            </p>
+          )}
         </div>
       )}
     </div>
