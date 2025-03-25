@@ -1,69 +1,60 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { io } from 'socket.io-client';
 
 function ScanOption({ onScanComplete }) {
   const [sessionId, setSessionId] = useState('');
   const [qrCodeValue, setQrCodeValue] = useState('');
   const [showQRCode, setShowQRCode] = useState(false);
   const [scanStatus, setScanStatus] = useState('idle'); // idle, waiting, complete
-  
-  useEffect(() => {
-    if (!sessionId) return;
-    
-    // Connect to socket server
-    const socket = io('http://localhost:3001');
-    
-    // Listen for scan completion
-    socket.on(`scan:${sessionId}`, (data) => {
-      console.log('Scan completed:', data);
-      setScanStatus('complete');
-      if (data.imageUrl) {
-        onScanComplete(data.imageUrl);
-      }
-    });
-    
-    return () => {
-      socket.disconnect();
-    };
-  }, [sessionId, onScanComplete]);
-  
-  const generateQRCode = async () => {
+
+  const generateQRCode = () => {
     try {
-      // Create a new scan session
-      const response = await fetch('http://localhost:3001/api/create-scan-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-      
-      const data = await response.json();
-      const newSessionId = data.sessionId;
-      setSessionId(newSessionId);
+      // For testing without a backend, generate a random session ID
+      const tempSessionId = 'test-' + Math.random().toString(36).substring(2, 15);
+      setSessionId(tempSessionId);
       
       // Generate mobile scanner URL with session ID
-      const scanUrl = `${window.location.origin}/mobile-scanner?sessionId=${newSessionId}`;
+      const scanUrl = `https://nostalgai.vercel.app/mobile-scanner?sessionId=${tempSessionId}`;
+      console.log('Generated QR code URL:', scanUrl);
       
       setQrCodeValue(scanUrl);
       setShowQRCode(true);
       setScanStatus('waiting');
     } catch (error) {
       console.error('Failed to create scan session:', error);
-      alert('Tarama oturumu oluşturulamadı. Lütfen tekrar deneyin.');
+      alert('Failed to create scan session. Please try again.');
+    }
+  };
+
+  // Just for testing - will be removed in production
+  const simulateSuccessfulScan = () => {
+    if (sessionId) {
+      // Create a mock data object that matches what your server would send
+      const mockData = {
+        sessionId: sessionId,
+        imageUrl: 'https://example.com/placeholder-image.jpg',
+        timestamp: new Date().toISOString()
+      };
+      
+      // Directly call the handler as if we received the socket event
+      console.log('Simulating scan with data:', mockData);
+      setScanStatus('complete');
+      onScanComplete(mockData.imageUrl);
+    } else {
+      alert('No active session. Generate a QR code first.');
     }
   };
 
   return (
-    <div className="text-center">
-      <p className="mb-4">Fiziksel fotoğrafınızı taramak için mobil cihazınızı kullanın.</p>
+    <div className="text-center p-4 border rounded shadow-sm bg-white">
+      <p className="mb-4">Use your mobile device to scan your physical photo.</p>
       
       <button
         onClick={generateQRCode}
         disabled={scanStatus === 'waiting'}
         className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
       >
-        {scanStatus === 'waiting' ? 'Tarama Bekleniyor...' : 'QR Kod Oluştur'}
+        {scanStatus === 'waiting' ? 'Scan Waiting...' : 'Generate QR Code'}
       </button>
       
       {showQRCode && (
@@ -72,12 +63,23 @@ function ScanOption({ onScanComplete }) {
             <QRCodeSVG value={qrCodeValue} size={200} />
           </div>
           <p className="mt-2 text-sm text-gray-600">
-            Bu kodu mobil cihazınızla tarayın
+            Scan this code with your mobile device
+          </p>
+          <p className="mt-1 text-xs text-gray-500">
+            QR code URL: {qrCodeValue}
           </p>
           {scanStatus === 'waiting' && (
-            <p className="mt-2 text-blue-600 animate-pulse">
-              Tarama bekleniyor...
-            </p>
+            <>
+              <p className="mt-2 text-blue-600 animate-pulse">
+                Waiting for scan...
+              </p>
+              <button 
+                onClick={simulateSuccessfulScan}
+                className="mt-4 text-xs bg-gray-200 px-3 py-1 rounded"
+              >
+                [TEST] Simulate successful scan
+              </button>
+            </>
           )}
         </div>
       )}

@@ -1,27 +1,27 @@
 /**
- * AI fotoğraf iyileştirme servis modülü
+ * AI photo enhancement service module
  */
 
-// Fotoğraf iyileştirme API'si 
+// Photo enhancement API
 export const enhancePhoto = async (imageFile) => {
   try {
     const formData = new FormData();
     formData.append('image', imageFile);
     
-    // API isteği (gerçek bir API için güncelleyin)
+    // API request (update for a real API)
     const response = await fetch('https://api.nostalgai.com/enhance', {
       method: 'POST',
       body: formData,
     });
     
     if (!response.ok) {
-      throw new Error(`API yanıt hatası: ${response.status}`);
+      throw new Error(`API response error: ${response.status}`);
     }
     
     const result = await response.json();
     return result.enhancedImageUrl;
   } catch (error) {
-    console.error('Fotoğraf iyileştirme hatası:', error);
+    console.error('Photo enhancement error:', error);
     throw error;
   }
 };
